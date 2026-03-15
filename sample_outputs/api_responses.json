@@ -1,0 +1,90 @@
+{
+  "POST /ingest": {
+    "request": "multipart/form-data with file=peblo_pdf_grade1_math_numbers.pdf",
+    "response": {
+      "message": "PDF ingested successfully.",
+      "source_id": "SRC_A1B2C3",
+      "filename": "peblo_pdf_grade1_math_numbers.pdf",
+      "grade": 1,
+      "subject": "Math",
+      "chunks_extracted": 6
+    }
+  },
+  "POST /generate-quiz": {
+    "request": "POST /generate-quiz?source_id=SRC_A1B2C3",
+    "response": {
+      "message": "Generated and stored 18 new quiz questions.",
+      "questions_generated": 18,
+      "sample": [
+        {
+          "question_id": "Q_3F8A1B2C",
+          "chunk_id": "SRC_A1B2C3_CH_01",
+          "question": "What do we use numbers for?",
+          "type": "MCQ",
+          "options": ["To colour pictures", "To count things around us", "To write stories", "To draw shapes"],
+          "answer": "To count things around us",
+          "difficulty": "easy"
+        }
+      ]
+    }
+  },
+  "GET /quiz": {
+    "request": "GET /quiz?topic=shapes&difficulty=easy&grade=1",
+    "response": {
+      "total": 3,
+      "filters": {
+        "topic": "shapes",
+        "difficulty": "easy",
+        "subject": null,
+        "grade": 1,
+        "question_type": null
+      },
+      "questions": [
+        {
+          "question_id": "Q_8G9H0I1J",
+          "question": "How many sides does a triangle have?",
+          "type": "MCQ",
+          "options": ["2", "3", "4", "5"],
+          "difficulty": "easy",
+          "subject": "Math",
+          "topic": "Shapes",
+          "grade": 1,
+          "chunk_id": "SRC_A1B2C3_CH_02"
+        }
+      ]
+    }
+  },
+  "POST /submit-answer": {
+    "request": {
+      "student_id": "S001",
+      "question_id": "Q_8G9H0I1J",
+      "selected_answer": "3"
+    },
+    "response": {
+      "student_id": "S001",
+      "question_id": "Q_8G9H0I1J",
+      "selected_answer": "3",
+      "correct_answer": "3",
+      "is_correct": true,
+      "feedback": "Correct! Great job!",
+      "adaptive_difficulty": {
+        "current_difficulty": "easy",
+        "correct_streak": 1,
+        "total_answered": 1,
+        "total_correct": 1,
+        "accuracy_percent": 100.0
+      }
+    }
+  },
+  "GET /student/{student_id}/profile": {
+    "request": "GET /student/S001/profile",
+    "response": {
+      "student_id": "S001",
+      "current_difficulty": "medium",
+      "correct_streak": 0,
+      "total_answered": 5,
+      "total_correct": 4,
+      "accuracy_percent": 80.0
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "source_id": "SRC_A1B2C3",
+  "filename": "peblo_pdf_grade1_math_numbers.pdf",
+  "grade": 1,
+  "subject": "Math",
+  "chunks_extracted": 6,
+  "sample_chunks": [
+    {
+      "chunk_id": "SRC_A1B2C3_CH_01",
+      "source_id": "SRC_A1B2C3",
+      "grade": 1,
+      "subject": "Math",
+      "topic": "Numbers and Counting",
+      "text": "Numbers help us count things around us. We start counting from zero. The numbers 1, 2, 3, 4, 5 are called natural numbers. We can count objects like apples, books, and pencils using numbers. Counting helps us know how many things we have."
+    },
+    {
+      "chunk_id": "SRC_A1B2C3_CH_02",
+      "source_id": "SRC_A1B2C3",
+      "grade": 1,
+      "subject": "Math",
+      "topic": "Shapes",
+      "text": "Shapes are all around us. A triangle has three sides and three corners. A square has four equal sides. A circle has no corners and no sides — it is perfectly round. A rectangle has four sides where opposite sides are equal."
+    }
+  ]
+}

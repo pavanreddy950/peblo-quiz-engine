@@ -1,0 +1,74 @@
+[
+  {
+    "question_id": "Q_3F8A1B2C",
+    "chunk_id": "SRC_A1B2C3_CH_01",
+    "question": "What do we use numbers for?",
+    "type": "MCQ",
+    "options": ["To colour pictures", "To count things around us", "To write stories", "To draw shapes"],
+    "answer": "To count things around us",
+    "difficulty": "easy",
+    "subject": "Math",
+    "topic": "Numbers and Counting",
+    "grade": 1
+  },
+  {
+    "question_id": "Q_7D9E2F3A",
+    "chunk_id": "SRC_A1B2C3_CH_01",
+    "question": "True or False: We start counting from zero.",
+    "type": "TrueFalse",
+    "options": ["True", "False"],
+    "answer": "True",
+    "difficulty": "easy",
+    "subject": "Math",
+    "topic": "Numbers and Counting",
+    "grade": 1
+  },
+  {
+    "question_id": "Q_4C5D6E7F",
+    "chunk_id": "SRC_A1B2C3_CH_01",
+    "question": "The numbers 1, 2, 3, 4, 5 are called ___ numbers.",
+    "type": "FillBlank",
+    "options": null,
+    "answer": "natural",
+    "difficulty": "easy",
+    "subject": "Math",
+    "topic": "Numbers and Counting",
+    "grade": 1
+  },
+  {
+    "question_id": "Q_8G9H0I1J",
+    "chunk_id": "SRC_A1B2C3_CH_02",
+    "question": "How many sides does a triangle have?",
+    "type": "MCQ",
+    "options": ["2", "3", "4", "5"],
+    "answer": "3",
+    "difficulty": "easy",
+    "subject": "Math",
+    "topic": "Shapes",
+    "grade": 1
+  },
+  {
+    "question_id": "Q_2K3L4M5N",
+    "chunk_id": "SRC_A1B2C3_CH_02",
+    "question": "True or False: A circle has no corners and no sides.",
+    "type": "TrueFalse",
+    "options": ["True", "False"],
+    "answer": "True",
+    "difficulty": "easy",
+    "subject": "Math",
+    "topic": "Shapes",
+    "grade": 1
+  },
+  {
+    "question_id": "Q_6O7P8Q9R",
+    "chunk_id": "SRC_A1B2C3_CH_02",
+    "question": "A ___ has four equal sides.",
+    "type": "FillBlank",
+    "options": null,
+    "answer": "square",
+    "difficulty": "easy",
+    "subject": "Math",
+    "topic": "Shapes",
+    "grade": 1
+  }
+]

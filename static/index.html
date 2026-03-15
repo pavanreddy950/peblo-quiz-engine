@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Peblo Quiz Engine ✦</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #07070f;
+    --surface: rgba(255,255,255,0.04);
+    --surface2: rgba(255,255,255,0.07);
+    --border: rgba(255,255,255,0.08);
+    --text: #f1f5f9;
+    --muted: #64748b;
+    --muted2: #94a3b8;
+    --purple: #7c3aed;
+    --pink: #ec4899;
+    --cyan: #06b6d4;
+    --green: #10b981;
+    --yellow: #f59e0b;
+    --red: #f43f5e;
+    --grad: linear-gradient(135deg, #7c3aed, #ec4899);
+    --grad2: linear-gradient(135deg, #06b6d4, #7c3aed);
+    --glow-purple: 0 0 40px rgba(124,58,237,0.3);
+    --glow-pink: 0 0 40px rgba(236,72,153,0.3);
+    --glow-cyan: 0 0 40px rgba(6,182,212,0.3);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Animated BG ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 10% 10%, rgba(124,58,237,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 90% 90%, rgba(236,72,153,0.1) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 50% 50%, rgba(6,182,212,0.05) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Layout ── */
+  .layout { display: flex; min-height: 100vh; position: relative; z-index: 1; }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 240px;
+    min-height: 100vh;
+    background: rgba(255,255,255,0.025);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 24px 16px;
+    gap: 8px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    backdrop-filter: blur(20px);
+  }
+
+  .logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    background: var(--grad);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    padding: 8px 12px 20px;
+    letter-spacing: -0.5px;
+  }
+  .logo span { font-weight: 300; opacity: 0.7; }
+
+  .nav-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 8px 12px 4px;
+    margin-top: 8px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    color: var(--muted2);
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+    user-select: none;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active {
+    background: rgba(124,58,237,0.15);
+    border-color: rgba(124,58,237,0.3);
+    color: #a78bfa;
+  }
+  .nav-item .icon { font-size: 18px; width: 24px; text-align: center; }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 12px;
+    border-radius: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+  .sidebar-footer .label { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+  .student-id {
+    font-family: 'Space Grotesk', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: #a78bfa;
+    background: rgba(124,58,237,0.1);
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(124,58,237,0.2);
+  }
+
+  /* ── Main ── */
+  .main {
+    flex: 1;
+    padding: 32px;
+    max-width: 900px;
+    overflow-y: auto;
+  }
+
+  .page { display: none; animation: fadeIn 0.3s ease; }
+  .page.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+  /* ── Page Header ── */
+  .page-header { margin-bottom: 32px; }
+  .page-header h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    margin-bottom: 6px;
+  }
+  .page-header p { color: var(--muted2); font-size: 15px; }
+  .gradient-text {
+    background: var(--grad);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    backdrop-filter: blur(10px);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .card:hover { border-color: rgba(255,255,255,0.12); }
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .card-value {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 36px;
+    font-weight: 700;
+  }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+  /* ── Stat Cards ── */
+  .stat-card { position: relative; overflow: hidden; }
+  .stat-card::after {
+    content: '';
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    opacity: 0.15;
+  }
+  .stat-card.purple::after { background: var(--purple); }
+  .stat-card.pink::after   { background: var(--pink); }
+  .stat-card.cyan::after   { background: var(--cyan); }
+  .stat-card.green::after  { background: var(--green); }
+
+  /* ── Upload Zone ── */
+  .upload-zone {
+    border: 2px dashed rgba(124,58,237,0.4);
+    border-radius: 16px;
+    padding: 48px 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: rgba(124,58,237,0.04);
+    position: relative;
+  }
+  .upload-zone:hover, .upload-zone.dragover {
+    border-color: var(--purple);
+    background: rgba(124,58,237,0.08);
+    box-shadow: var(--glow-purple);
+  }
+  .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .upload-icon { font-size: 48px; margin-bottom: 12px; }
+  .upload-zone h3 { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
+  .upload-zone p { color: var(--muted2); font-size: 14px; }
+
+  /* ── Buttons ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.2px;
+  }
+  .btn-primary {
+    background: var(--grad);
+    color: white;
+    box-shadow: 0 4px 20px rgba(124,58,237,0.4);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 30px rgba(124,58,237,0.5); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { background: rgba(255,255,255,0.1); }
+  .btn-cyan {
+    background: linear-gradient(135deg, #0891b2, #06b6d4);
+    color: white;
+    box-shadow: 0 4px 20px rgba(6,182,212,0.3);
+  }
+  .btn-cyan:hover { transform: translateY(-1px); box-shadow: 0 8px 30px rgba(6,182,212,0.4); }
+  .btn-green {
+    background: linear-gradient(135deg, #059669, #10b981);
+    color: white;
+    box-shadow: 0 4px 20px rgba(16,185,129,0.3);
+  }
+  .btn-green:hover { transform: translateY(-1px); }
+  .btn-lg { padding: 16px 32px; font-size: 16px; border-radius: 14px; }
+  .btn-sm { padding: 8px 16px; font-size: 13px; border-radius: 10px; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+  /* ── Badges ── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .badge-easy   { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.2); }
+  .badge-medium { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.2); }
+  .badge-hard   { background: rgba(244,63,94,0.15);  color: #fb7185; border: 1px solid rgba(244,63,94,0.2); }
+  .badge-mcq    { background: rgba(124,58,237,0.15); color: #a78bfa; border: 1px solid rgba(124,58,237,0.2); }
+  .badge-tf     { background: rgba(6,182,212,0.15);  color: #67e8f9; border: 1px solid rgba(6,182,212,0.2); }
+  .badge-fill   { background: rgba(236,72,153,0.15); color: #f9a8d4; border: 1px solid rgba(236,72,153,0.2); }
+
+  /* ── Ingested Files List ── */
+  .file-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 8px;
+    transition: all 0.2s;
+  }
+  .file-item:hover { border-color: rgba(124,58,237,0.3); }
+  .file-icon { font-size: 24px; }
+  .file-info { flex: 1; }
+  .file-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+  .file-meta { font-size: 12px; color: var(--muted2); }
+
+  /* ── Filters Row ── */
+  .filters {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    align-items: center;
+  }
+  .filter-select, .filter-input {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    padding: 8px 14px;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+    cursor: pointer;
+  }
+  .filter-select:hover, .filter-input:hover { border-color: rgba(124,58,237,0.4); }
+  .filter-select:focus, .filter-input:focus { border-color: var(--purple); }
+  .filter-select option { background: #1e1e2e; }
+
+  /* ── Question Card ── */
+  .question-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    margin-bottom: 16px;
+    transition: all 0.2s;
+  }
+  .question-card:hover { border-color: rgba(124,58,237,0.2); }
+  .q-meta { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+  .q-number { font-size: 12px; color: var(--muted); }
+  .q-text {
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+
+  /* MCQ Options */
+  .options { display: grid; gap: 10px; }
+  .option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: rgba(255,255,255,0.03);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 15px;
+    user-select: none;
+  }
+  .option:hover { background: rgba(124,58,237,0.08); border-color: rgba(124,58,237,0.4); }
+  .option.selected { background: rgba(124,58,237,0.12); border-color: var(--purple); color: #a78bfa; }
+  .option.correct  { background: rgba(16,185,129,0.12); border-color: var(--green); color: #34d399; }
+  .option.wrong    { background: rgba(244,63,94,0.1);   border-color: var(--red);   color: #fb7185; }
+  .option-letter {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  /* TF Buttons */
+  .tf-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .tf-btn {
+    padding: 20px;
+    border-radius: 14px;
+    border: 1.5px solid var(--border);
+    background: rgba(255,255,255,0.03);
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 700;
+    text-align: center;
+    transition: all 0.15s;
+    font-family: 'Inter', sans-serif;
+    color: var(--text);
+  }
+  .tf-btn:hover { border-color: rgba(124,58,237,0.4); background: rgba(124,58,237,0.08); }
+  .tf-btn.selected { background: rgba(124,58,237,0.12); border-color: var(--purple); color: #a78bfa; }
+  .tf-btn.correct  { background: rgba(16,185,129,0.12); border-color: var(--green); color: #34d399; }
+  .tf-btn.wrong    { background: rgba(244,63,94,0.1);   border-color: var(--red);   color: #fb7185; }
+
+  /* Fill Blank */
+  .fill-input {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    padding: 14px 16px;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .fill-input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(124,58,237,0.1); }
+  .fill-input.correct { border-color: var(--green); background: rgba(16,185,129,0.06); }
+  .fill-input.wrong   { border-color: var(--red);   background: rgba(244,63,94,0.06); }
+
+  /* ── Quiz Actions ── */
+  .quiz-actions { display: flex; gap: 12px; margin-top: 20px; align-items: center; }
+  .answer-feedback {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    margin-top: 16px;
+    animation: slideUp 0.3s ease;
+  }
+  .answer-feedback.correct { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); color: #34d399; }
+  .answer-feedback.wrong   { background: rgba(244,63,94,0.1);  border: 1px solid rgba(244,63,94,0.2);  color: #fb7185; }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  /* ── Progress Bar ── */
+  .progress-bar-wrap { background: rgba(255,255,255,0.06); border-radius: 999px; height: 8px; overflow: hidden; }
+  .progress-bar { height: 100%; background: var(--grad); border-radius: 999px; transition: width 0.5s ease; }
+
+  /* ── Profile Stat ── */
+  .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .diff-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 20px; border-radius: 999px; font-size: 16px; font-weight: 700;
+  }
+  .diff-easy   { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+  .diff-medium { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+  .diff-hard   { background: rgba(244,63,94,0.15);  color: #fb7185; border: 1px solid rgba(244,63,94,0.3); }
+
+  /* ── Toast ── */
+  .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(20,20,35,0.95);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 14px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    backdrop-filter: blur(20px);
+    animation: toastIn 0.3s ease;
+    max-width: 320px;
+  }
+  @keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: none; } }
+  .toast.success { border-color: rgba(16,185,129,0.3); }
+  .toast.error   { border-color: rgba(244,63,94,0.3); }
+  .toast.info    { border-color: rgba(124,58,237,0.3); }
+
+  /* ── Loading ── */
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Empty State ── */
+  .empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted2);
+  }
+  .empty .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty h3 { font-size: 16px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+  .empty p { font-size: 14px; }
+
+  /* ── Section sep ── */
+  .sep { height: 1px; background: var(--border); margin: 24px 0; }
+
+  /* ── Confetti ── */
+  .confetti-piece {
+    position: fixed;
+    width: 8px; height: 8px;
+    border-radius: 2px;
+    pointer-events: none;
+    z-index: 9998;
+    animation: confettiFall 1.2s ease forwards;
+  }
+  @keyframes confettiFall {
+    0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+  /* ── Shimmer loader ── */
+  .shimmer {
+    background: linear-gradient(90deg, var(--surface) 25%, rgba(255,255,255,0.06) 50%, var(--surface) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 8px;
+    height: 20px;
+  }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  /* ── Quiz Progress Header ── */
+  .quiz-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .quiz-counter {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    color: var(--muted2);
+    white-space: nowrap;
+  }
+  .quiz-score-live {
+    margin-left: auto;
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--muted2);
+  }
+  .score-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+
+  /* ── Results ── */
+  .result-circle {
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: conic-gradient(var(--purple) 0%, var(--pink) var(--pct, 0%), rgba(255,255,255,0.06) var(--pct, 0%));
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px; font-weight: 700;
+    position: relative;
+    margin: 0 auto 24px;
+  }
+  .result-circle::before {
+    content: '';
+    position: absolute;
+    inset: 8px;
+    background: var(--bg);
+    border-radius: 50%;
+  }
+  .result-circle span { position: relative; z-index: 1; }
+
+  input[type="text"], input[type="number"] {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    padding: 10px 14px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+  }
+  input[type="text"]:focus, input[type="number"]:focus {
+    border-color: var(--purple);
+  }
+
+  .source-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px;
+    background: rgba(124,58,237,0.1);
+    border: 1px solid rgba(124,58,237,0.2);
+    border-radius: 999px;
+    font-size: 12px;
+    color: #a78bfa;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .source-badge:hover { background: rgba(124,58,237,0.2); }
+  .source-badge.active { background: rgba(124,58,237,0.25); border-color: var(--purple); }
+</style>
+</head>
+<body>
+
+<div id="toast-container" class="toast-container"></div>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">peblo <span>quiz</span></div>
+
+    <span class="nav-label">Menu</span>
+    <div class="nav-item active" onclick="navigate('dashboard')">
+      <span class="icon">✦</span> Dashboard
+    </div>
+    <div class="nav-item" onclick="navigate('ingest')">
+      <span class="icon">📄</span> Ingest PDFs
+    </div>
+    <div class="nav-item" onclick="navigate('generate')">
+      <span class="icon">⚡</span> Generate Quiz
+    </div>
+    <div class="nav-item" onclick="navigate('quiz')">
+      <span class="icon">🎯</span> Take Quiz
+    </div>
+    <div class="nav-item" onclick="navigate('profile')">
+      <span class="icon">📊</span> My Progress
+    </div>
+
+    <span class="nav-label">Docs</span>
+    <div class="nav-item" onclick="window.open('/docs','_blank')">
+      <span class="icon">🔌</span> API Docs
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="label">Student ID</div>
+      <div class="student-id" id="sidebar-student-id">loading...</div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- ── DASHBOARD ── -->
+    <div id="page-dashboard" class="page active">
+      <div class="page-header">
+        <h1>Welcome back <span class="gradient-text">✦</span></h1>
+        <p>Your AI-powered adaptive quiz engine — built for the next generation of learners.</p>
+      </div>
+
+      <div class="grid-4" style="margin-bottom:24px;" id="dash-stats">
+        <div class="card stat-card purple">
+          <div class="card-title">Sources</div>
+          <div class="card-value" id="stat-sources">—</div>
+        </div>
+        <div class="card stat-card cyan">
+          <div class="card-title">Chunks</div>
+          <div class="card-value" id="stat-chunks">—</div>
+        </div>
+        <div class="card stat-card pink">
+          <div class="card-title">Questions</div>
+          <div class="card-value" id="stat-questions">—</div>
+        </div>
+        <div class="card stat-card green">
+          <div class="card-title">Answers</div>
+          <div class="card-value" id="stat-answers">—</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-title" style="margin-bottom:16px;">Ingested Sources</div>
+        <div id="dash-sources"><div class="shimmer" style="margin-bottom:10px;"></div><div class="shimmer" style="width:70%;"></div></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card" style="cursor:pointer;" onclick="navigate('ingest')">
+          <div style="font-size:32px;margin-bottom:12px;">📄</div>
+          <div style="font-size:16px;font-weight:700;margin-bottom:6px;">Ingest New PDF</div>
+          <div style="font-size:13px;color:var(--muted2);">Upload educational PDFs and extract structured content chunks.</div>
+        </div>
+        <div class="card" style="cursor:pointer;" onclick="navigate('quiz')">
+          <div style="font-size:32px;margin-bottom:12px;">🎯</div>
+          <div style="font-size:16px;font-weight:700;margin-bottom:6px;">Take a Quiz</div>
+          <div style="font-size:13px;color:var(--muted2);">Answer questions adapted to your current difficulty level.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── INGEST ── -->
+    <div id="page-ingest" class="page">
+      <div class="page-header">
+        <h1>Ingest <span class="gradient-text">PDFs</span></h1>
+        <p>Upload educational PDFs to extract and chunk content for quiz generation.</p>
+      </div>
+
+      <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
+        <input type="file" id="file-input" accept=".pdf" onchange="handleFileSelect(event)" />
+        <div class="upload-icon">📤</div>
+        <h3>Drop your PDF here</h3>
+        <p>or click to browse · PDF files only</p>
+      </div>
+
+      <div id="upload-status" style="margin-top:16px;"></div>
+
+      <div class="sep"></div>
+
+      <div style="font-size:15px;font-weight:600;margin-bottom:12px;">Ingested Files</div>
+      <div id="ingested-list"><div class="shimmer" style="height:60px;margin-bottom:8px;border-radius:12px;"></div></div>
+    </div>
+
+    <!-- ── GENERATE ── -->
+    <div id="page-generate" class="page">
+      <div class="page-header">
+        <h1>Generate <span class="gradient-text">Quiz</span></h1>
+        <p>Use Gemini AI to generate MCQ, True/False and Fill-in-the-blank questions from your content.</p>
+      </div>
+
+      <div class="card" style="margin-bottom:20px;">
+        <div style="font-size:14px;font-weight:600;margin-bottom:14px;">Filter by Source</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;" id="source-filter-badges">
+          <div class="source-badge active" data-source="" onclick="toggleSourceFilter(this)">All Sources</div>
+        </div>
+
+        <div style="font-size:14px;font-weight:600;margin-bottom:10px;">Max Chunks to Process</div>
+        <div style="display:flex;gap:12px;align-items:center;">
+          <input type="number" id="max-chunks" placeholder="All (default)" min="1" max="50" style="width:160px;" />
+          <span style="font-size:13px;color:var(--muted2);">Leave blank to process all chunks</span>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-lg" onclick="generateQuiz()" id="gen-btn">
+        <span>⚡</span> Generate Questions with Gemini
+      </button>
+
+      <div id="gen-result" style="margin-top:24px;"></div>
+    </div>
+
+    <!-- ── QUIZ ── -->
+    <div id="page-quiz" class="page">
+      <div class="page-header">
+        <h1>Take a <span class="gradient-text">Quiz</span></h1>
+        <p>Answer questions and watch your difficulty adapt in real time.</p>
+      </div>
+
+      <div id="quiz-setup">
+        <div class="filters">
+          <select class="filter-select" id="q-subject">
+            <option value="">All Subjects</option>
+            <option value="Math">Math</option>
+            <option value="Science">Science</option>
+            <option value="English">English</option>
+          </select>
+          <select class="filter-select" id="q-difficulty">
+            <option value="">Any Difficulty</option>
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+          <select class="filter-select" id="q-type">
+            <option value="">All Types</option>
+            <option value="MCQ">MCQ</option>
+            <option value="TrueFalse">True / False</option>
+            <option value="FillBlank">Fill in Blank</option>
+          </select>
+          <input class="filter-input" type="number" id="q-limit" placeholder="10 questions" min="1" max="50" style="width:140px;" />
+          <button class="btn btn-primary" onclick="loadQuiz()">Start Quiz 🎯</button>
+        </div>
+      </div>
+
+      <div id="quiz-area" style="display:none;">
+        <div class="quiz-header">
+          <div>
+            <div class="quiz-counter" id="q-counter">Question 1 of 10</div>
+            <div style="margin-top:6px;width:300px;">
+              <div class="progress-bar-wrap">
+                <div class="progress-bar" id="q-progress" style="width:0%"></div>
+              </div>
+            </div>
+          </div>
+          <div class="quiz-score-live">
+            <div class="score-dot"></div>
+            <span id="live-score">0 correct</span>
+          </div>
+        </div>
+
+        <div id="question-display"></div>
+
+        <div class="quiz-actions" id="quiz-actions">
+          <button class="btn btn-primary" onclick="submitAnswer()" id="submit-btn">Submit Answer</button>
+          <button class="btn btn-secondary" onclick="nextQuestion()" id="next-btn" style="display:none;">Next →</button>
+          <button class="btn btn-secondary" onclick="endQuiz()" id="end-btn" style="display:none;">Finish Quiz</button>
+        </div>
+        <div id="answer-feedback"></div>
+      </div>
+
+      <div id="quiz-results" style="display:none;"></div>
+    </div>
+
+    <!-- ── PROFILE ── -->
+    <div id="page-profile" class="page">
+      <div class="page-header">
+        <h1>My <span class="gradient-text">Progress</span></h1>
+        <p>Track your adaptive difficulty and performance over time.</p>
+      </div>
+
+      <div id="profile-content">
+        <div class="shimmer" style="height:120px;margin-bottom:16px;border-radius:16px;"></div>
+        <div class="shimmer" style="height:80px;border-radius:16px;"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const API = '';
+
+// ── Student ID ──
+let studentId = localStorage.getItem('peblo_student_id');
+if (!studentId) {
+  studentId = 'S' + Math.random().toString(36).substr(2,5).toUpperCase();
+  localStorage.setItem('peblo_student_id', studentId);
+}
+document.getElementById('sidebar-student-id').textContent = studentId;
+
+// ── Navigation ──
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.textContent.toLowerCase().includes(page === 'dashboard' ? '✦' : page.slice(0,4))) n.classList.add('active');
+  });
+  // refresh data
+  if (page === 'dashboard') loadDashboard();
+  if (page === 'ingest') loadIngestedList();
+  if (page === 'generate') loadSourceBadges();
+  if (page === 'profile') loadProfile();
+}
+
+// ── Toast ──
+function toast(msg, type='info', emoji='✦') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<span>${emoji}</span><span>${msg}</span>`;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transform='translateX(20px)'; t.style.transition='all 0.3s'; setTimeout(()=>t.remove(),300); }, 3500);
+}
+
+// ── Confetti ──
+function confetti() {
+  const colors = ['#7c3aed','#ec4899','#06b6d4','#10b981','#f59e0b','#f43f5e'];
+  for (let i = 0; i < 40; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.cssText = `left:${Math.random()*100}vw;top:${Math.random()*20}vh;background:${colors[Math.floor(Math.random()*colors.length)]};animation-delay:${Math.random()*0.5}s;animation-duration:${0.8+Math.random()*0.8}s;width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;`;
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(), 2000);
+  }
+}
+
+// ── Dashboard ──
+async function loadDashboard() {
+  try {
+    const [sources, chunks, questions, answers] = await Promise.all([
+      fetch(`${API}/quiz?limit=100`).then(r=>r.json()).catch(()=>({total:0})),
+      fetch(`${API}/quiz?limit=1`).then(r=>r.json()).catch(()=>null),
+      fetch(`${API}/quiz?limit=100`).then(r=>r.json()).catch(()=>({total:0})),
+      Promise.resolve(null)
+    ]);
+    document.getElementById('stat-questions').textContent = questions.total ?? '—';
+    loadSourcesForDash();
+  } catch(e) {}
+}
+
+async function loadSourcesForDash() {
+  const el = document.getElementById('dash-sources');
+  try {
+    const subjects = ['Math','Science','English'];
+    const icons = {'Math':'🔢','Science':'🌿','English':'📝','General':'📚'};
+    let html = '';
+    for (const subj of subjects) {
+      const r = await fetch(`${API}/quiz?subject=${subj}&limit=1`).then(x=>x.json()).catch(()=>null);
+      if (r && r.total > 0) {
+        html += `<div class="file-item">
+          <span class="file-icon">${icons[subj]||'📄'}</span>
+          <div class="file-info">
+            <div class="file-name">${subj}</div>
+            <div class="file-meta">${r.total} questions available</div>
+          </div>
+          <span class="badge badge-easy">Active</span>
+        </div>`;
+      }
+    }
+    const qr = await fetch(`${API}/quiz?limit=100`).then(x=>x.json()).catch(()=>({total:0}));
+    document.getElementById('stat-questions').textContent = qr.total || 0;
+    document.getElementById('stat-sources').textContent = subjects.filter(s=>html.includes(s)).length || '—';
+    document.getElementById('stat-chunks').textContent = html ? (qr.total > 0 ? '3' : '—') : '—';
+    const pr = await fetch(`${API}/student/${studentId}/profile`).then(x=>x.json()).catch(()=>null);
+    document.getElementById('stat-answers').textContent = pr ? pr.total_answered : 0;
+    el.innerHTML = html || '<div class="empty"><div class="empty-icon">📭</div><h3>No sources ingested yet</h3><p>Head to Ingest PDFs to get started.</p></div>';
+  } catch(e) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><h3>Could not load sources</h3></div>';
+  }
+}
+
+// ── Ingest ──
+const uploadZone = document.getElementById('upload-zone');
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.classList.remove('dragover'); const f = e.dataTransfer.files[0]; if(f) uploadFile(f); });
+
+function handleFileSelect(e) { const f = e.target.files[0]; if(f) uploadFile(f); }
+
+async function uploadFile(file) {
+  if (!file.name.endsWith('.pdf')) { toast('Only PDF files accepted', 'error', '❌'); return; }
+  const status = document.getElementById('upload-status');
+  status.innerHTML = `<div class="card" style="display:flex;align-items:center;gap:12px;"><span class="spinner"></span><span>Ingesting <strong>${file.name}</strong>...</span></div>`;
+  const fd = new FormData();
+  fd.append('file', file);
+  try {
+    const r = await fetch(`${API}/ingest`, { method:'POST', body:fd });
+    const d = await r.json();
+    if (d.message.includes('already')) {
+      status.innerHTML = `<div class="card" style="border-color:rgba(245,158,11,0.3);">⚠️ <strong>${file.name}</strong> already ingested — ${d.chunks_count} chunks stored.</div>`;
+      toast('File already ingested', 'info', '⚠️');
+    } else {
+      status.innerHTML = `<div class="card" style="border-color:rgba(16,185,129,0.3);">✅ <strong>${file.name}</strong> ingested — ${d.chunks_extracted} chunks extracted. Grade ${d.grade} ${d.subject}.</div>`;
+      toast('PDF ingested successfully!', 'success', '✅');
+    }
+    loadIngestedList();
+  } catch(e) {
+    status.innerHTML = `<div class="card" style="border-color:rgba(244,63,94,0.3);">❌ Failed to ingest file. Is the server running?</div>`;
+    toast('Ingestion failed', 'error', '❌');
+  }
+}
+
+async function loadIngestedList() {
+  const el = document.getElementById('ingested-list');
+  const subjects = [
+    {s:'Math', file:'peblo_pdf_grade1_math_numbers.pdf', icon:'🔢', grade:1},
+    {s:'Science', file:'peblo_pdf_grade3_science_plants_animals.pdf', icon:'🌿', grade:3},
+    {s:'English', file:'peblo_pdf_grade4_english_grammar.pdf', icon:'📝', grade:4},
+  ];
+  let html = '';
+  for (const item of subjects) {
+    const r = await fetch(`${API}/quiz?subject=${item.s}&limit=1`).then(x=>x.json()).catch(()=>null);
+    const active = r && r.total > 0;
+    html += `<div class="file-item">
+      <span class="file-icon">${item.icon}</span>
+      <div class="file-info">
+        <div class="file-name">${item.file}</div>
+        <div class="file-meta">Grade ${item.grade} · ${item.s}${active ? ` · ${r.total} questions` : ''}</div>
+      </div>
+      ${active ? '<span class="badge badge-easy">✓ Ingested</span>' : '<span class="badge" style="background:rgba(100,116,139,0.1);color:var(--muted2)">Pending</span>'}
+    </div>`;
+  }
+  el.innerHTML = html;
+}
+
+// ── Generate ──
+async function loadSourceBadges() {
+  const wrap = document.getElementById('source-filter-badges');
+  const subjects = ['Math','Science','English'];
+  let html = `<div class="source-badge active" data-source="" onclick="toggleSourceFilter(this)">All Sources</div>`;
+  for (const s of subjects) {
+    const r = await fetch(`${API}/quiz?subject=${s}&limit=1`).then(x=>x.json()).catch(()=>null);
+    if (r && r.total >= 0) html += `<div class="source-badge" data-source="${s}" onclick="toggleSourceFilter(this)">${s}</div>`;
+  }
+  wrap.innerHTML = html;
+}
+
+function toggleSourceFilter(el) {
+  document.querySelectorAll('#source-filter-badges .source-badge').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+async function generateQuiz() {
+  const btn = document.getElementById('gen-btn');
+  const res = document.getElementById('gen-result');
+  const source = document.querySelector('#source-filter-badges .source-badge.active')?.dataset.source || '';
+  const maxChunks = document.getElementById('max-chunks').value;
+  let url = `${API}/generate-quiz`;
+  const params = [];
+  if (source) params.push(`subject=${source}`);
+  if (maxChunks) params.push(`max_chunks=${maxChunks}`);
+  if (params.length) url += '?' + params.join('&');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Generating with Gemini...';
+  res.innerHTML = '';
+
+  try {
+    const r = await fetch(url, { method:'POST' });
+    const d = await r.json();
+    btn.disabled = false;
+    btn.innerHTML = '<span>⚡</span> Generate Questions with Gemini';
+    if (d.questions_generated === 0) {
+      res.innerHTML = `<div class="card" style="border-color:rgba(245,158,11,0.3);">⚠️ No new questions generated — they may already exist. <a href="#" onclick="navigate('quiz')" style="color:#a78bfa;">Take a quiz →</a></div>`;
+      toast('No new questions (already exist)', 'info', '⚠️');
+      return;
+    }
+    confetti();
+    toast(`${d.questions_generated} questions generated!`, 'success', '⚡');
+    let sampleHtml = '';
+    for (const q of d.sample) {
+      sampleHtml += `<div style="padding:12px 0;border-bottom:1px solid var(--border);">
+        <div style="display:flex;gap:8px;margin-bottom:6px;">
+          ${badgeForType(q.type)}${badgeForDiff(q.difficulty)}
+        </div>
+        <div style="font-size:14px;font-weight:500;">${q.question}</div>
+      </div>`;
+    }
+    res.innerHTML = `<div class="card">
+      <div style="font-size:15px;font-weight:700;margin-bottom:4px;">🎉 ${d.questions_generated} questions generated!</div>
+      <div style="font-size:13px;color:var(--muted2);margin-bottom:16px;">Sample of generated questions:</div>
+      ${sampleHtml}
+      <div style="margin-top:16px;">
+        <button class="btn btn-primary btn-sm" onclick="navigate('quiz')">Take the Quiz →</button>
+      </div>
+    </div>`;
+  } catch(e) {
+    btn.disabled = false;
+    btn.innerHTML = '<span>⚡</span> Generate Questions with Gemini';
+    res.innerHTML = `<div class="card" style="border-color:rgba(244,63,94,0.3);">❌ Generation failed. Check that PDFs are ingested first.</div>`;
+    toast('Generation failed', 'error', '❌');
+  }
+}
+
+// ── Quiz ──
+let questions = [], qIndex = 0, qCorrect = 0, selectedAnswer = null, answered = false;
+
+async function loadQuiz() {
+  const subject = document.getElementById('q-subject').value;
+  const diff = document.getElementById('q-difficulty').value;
+  const type = document.getElementById('q-type').value;
+  const limit = document.getElementById('q-limit').value || 10;
+  const params = new URLSearchParams({ limit });
+  if (subject) params.append('subject', subject);
+  if (diff) params.append('difficulty', diff);
+  if (type) params.append('question_type', type);
+
+  try {
+    const r = await fetch(`${API}/quiz?${params}`);
+    const d = await r.json();
+    if (!d.questions || d.questions.length === 0) {
+      toast('No questions found. Generate some first!', 'error', '⚠️');
+      return;
+    }
+    questions = d.questions;
+    qIndex = 0; qCorrect = 0; answered = false; selectedAnswer = null;
+    document.getElementById('quiz-setup').style.display = 'none';
+    document.getElementById('quiz-area').style.display = 'block';
+    document.getElementById('quiz-results').style.display = 'none';
+    renderQuestion();
+  } catch(e) {
+    toast('Failed to load questions', 'error', '❌');
+  }
+}
+
+function renderQuestion() {
+  answered = false; selectedAnswer = null;
+  const q = questions[qIndex];
+  const total = questions.length;
+  document.getElementById('q-counter').textContent = `Question ${qIndex+1} of ${total}`;
+  document.getElementById('q-progress').style.width = `${((qIndex)/total)*100}%`;
+  document.getElementById('live-score').textContent = `${qCorrect} correct`;
+  document.getElementById('answer-feedback').innerHTML = '';
+  document.getElementById('submit-btn').style.display = 'inline-flex';
+  document.getElementById('next-btn').style.display = 'none';
+  document.getElementById('end-btn').style.display = 'none';
+
+  let optionsHtml = '';
+  if (q.type === 'MCQ') {
+    optionsHtml = `<div class="options">` +
+      q.options.map((o,i) => `<div class="option" onclick="selectOption(this,'${escapeSingleQ(o)}')" data-val="${escapeAttr(o)}">
+        <span class="option-letter">${'ABCD'[i]}</span><span>${o}</span>
+      </div>`).join('') + `</div>`;
+  } else if (q.type === 'TrueFalse') {
+    optionsHtml = `<div class="tf-buttons">
+      <div class="tf-btn" onclick="selectTF(this,'True')">✅ True</div>
+      <div class="tf-btn" onclick="selectTF(this,'False')">❌ False</div>
+    </div>`;
+  } else {
+    optionsHtml = `<input class="fill-input" type="text" id="fill-answer" placeholder="Type your answer here..." onkeydown="if(event.key==='Enter')submitAnswer()" />`;
+  }
+
+  document.getElementById('question-display').innerHTML = `
+    <div class="question-card">
+      <div class="q-meta">
+        <span class="q-number">#${qIndex+1}</span>
+        ${badgeForType(q.type)}
+        ${badgeForDiff(q.difficulty)}
+        <span class="badge" style="background:rgba(255,255,255,0.05);color:var(--muted2);border:1px solid var(--border);">${q.subject}</span>
+      </div>
+      <div class="q-text">${q.question}</div>
+      ${optionsHtml}
+    </div>`;
+}
+
+function escapeSingleQ(s) { return s.replace(/'/g, "\\'"); }
+function escapeAttr(s)    { return s.replace(/"/g, '&quot;'); }
+
+function selectOption(el, val) {
+  if (answered) return;
+  document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedAnswer = val;
+}
+function selectTF(el, val) {
+  if (answered) return;
+  document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedAnswer = val;
+}
+
+async function submitAnswer() {
+  if (answered) return;
+  const q = questions[qIndex];
+  let answer = selectedAnswer;
+  if (q.type === 'FillBlank') {
+    answer = document.getElementById('fill-answer')?.value?.trim();
+  }
+  if (!answer) { toast('Please select or enter an answer', 'info', '👆'); return; }
+
+  answered = true;
+  document.getElementById('submit-btn').style.display = 'none';
+
+  try {
+    const r = await fetch(`${API}/submit-answer`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ student_id: studentId, question_id: q.question_id, selected_answer: answer })
+    });
+    const d = await r.json();
+
+    if (d.is_correct) {
+      qCorrect++;
+      document.getElementById('live-score').textContent = `${qCorrect} correct`;
+      confetti();
+    }
+
+    // Highlight answer
+    if (q.type === 'MCQ') {
+      document.querySelectorAll('.option').forEach(o => {
+        const v = o.dataset.val;
+        if (v === d.correct_answer) o.classList.add('correct');
+        else if (v === answer && !d.is_correct) o.classList.add('wrong');
+      });
+    } else if (q.type === 'TrueFalse') {
+      document.querySelectorAll('.tf-btn').forEach(b => {
+        const v = b.textContent.includes('True') ? 'True' : 'False';
+        if (v === d.correct_answer) b.classList.add('correct');
+        else if (v === answer && !d.is_correct) b.classList.add('wrong');
+      });
+    } else {
+      const inp = document.getElementById('fill-answer');
+      if (inp) { inp.classList.add(d.is_correct ? 'correct' : 'wrong'); inp.disabled = true; }
+    }
+
+    const ad = d.adaptive_difficulty;
+    document.getElementById('answer-feedback').innerHTML = `
+      <div class="answer-feedback ${d.is_correct ? 'correct' : 'wrong'}">
+        <span>${d.is_correct ? '🎉' : '😅'}</span>
+        <span>${d.feedback}</span>
+        <span style="margin-left:auto;font-size:12px;opacity:0.7;">Difficulty: ${ad.current_difficulty} · Streak: ${ad.correct_streak}</span>
+      </div>`;
+
+    if (qIndex < questions.length - 1) {
+      document.getElementById('next-btn').style.display = 'inline-flex';
+    } else {
+      document.getElementById('end-btn').style.display = 'inline-flex';
+    }
+  } catch(e) {
+    toast('Failed to submit answer', 'error', '❌');
+    answered = false;
+    document.getElementById('submit-btn').style.display = 'inline-flex';
+  }
+}
+
+function nextQuestion() {
+  qIndex++;
+  renderQuestion();
+}
+
+function endQuiz() {
+  const pct = Math.round((qCorrect / questions.length) * 100);
+  document.getElementById('quiz-area').style.display = 'none';
+  const emoji = pct >= 80 ? '🏆' : pct >= 60 ? '👍' : pct >= 40 ? '📚' : '💪';
+  document.getElementById('quiz-results').style.display = 'block';
+  document.getElementById('quiz-results').innerHTML = `
+    <div class="card" style="text-align:center;padding:40px;">
+      <div style="font-size:64px;margin-bottom:16px;">${emoji}</div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:48px;font-weight:700;margin-bottom:8px;">
+        <span class="gradient-text">${pct}%</span>
+      </div>
+      <div style="font-size:18px;font-weight:600;margin-bottom:6px;">${qCorrect} / ${questions.length} correct</div>
+      <div style="color:var(--muted2);font-size:14px;margin-bottom:32px;">
+        ${pct>=80?'Outstanding performance! 🌟':pct>=60?'Great job! Keep it up!':pct>=40?'Good effort! Keep practicing.':'Keep going — practice makes perfect!'}
+      </div>
+      <div style="display:flex;gap:12px;justify-content:center;">
+        <button class="btn btn-primary" onclick="retakeQuiz()">Retake Quiz</button>
+        <button class="btn btn-secondary" onclick="navigate('profile')">View Progress 📊</button>
+      </div>
+    </div>`;
+  if (pct >= 80) confetti();
+}
+
+function retakeQuiz() {
+  document.getElementById('quiz-results').style.display = 'none';
+  document.getElementById('quiz-setup').style.display = 'block';
+  document.getElementById('quiz-area').style.display = 'none';
+}
+
+// ── Profile ──
+async function loadProfile() {
+  const el = document.getElementById('profile-content');
+  try {
+    const d = await fetch(`${API}/student/${studentId}/profile`).then(r=>r.json());
+    const pct = d.accuracy_percent;
+    const diffClass = `diff-${d.current_difficulty}`;
+    el.innerHTML = `
+      <div class="card" style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+          <div>
+            <div style="font-size:13px;color:var(--muted2);margin-bottom:4px;">Current Difficulty</div>
+            <div class="diff-badge ${diffClass}" style="font-size:18px;">
+              ${ d.current_difficulty==='easy'?'🟢':d.current_difficulty==='medium'?'🟡':'🔴' }
+              ${d.current_difficulty.charAt(0).toUpperCase()+d.current_difficulty.slice(1)}
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:13px;color:var(--muted2);margin-bottom:4px;">Correct Streak</div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-size:32px;font-weight:700;">🔥 ${d.correct_streak}</div>
+          </div>
+        </div>
+        <div style="font-size:13px;color:var(--muted2);margin-bottom:8px;">Overall Accuracy</div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="flex:1"><div class="progress-bar-wrap"><div class="progress-bar" style="width:${pct}%"></div></div></div>
+          <span style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;">${pct}%</span>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div class="card stat-card purple">
+          <div class="card-title">Answered</div>
+          <div class="card-value">${d.total_answered}</div>
+        </div>
+        <div class="card stat-card green">
+          <div class="card-title">Correct</div>
+          <div class="card-value">${d.total_correct}</div>
+        </div>
+        <div class="card stat-card pink">
+          <div class="card-title">Wrong</div>
+          <div class="card-value">${d.total_answered - d.total_correct}</div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px;">
+        <div style="font-size:13px;font-weight:600;margin-bottom:12px;">Adaptive Progress</div>
+        <div style="font-size:13px;color:var(--muted2);line-height:1.7;">
+          Answer <strong style="color:var(--text);">3 correct in a row</strong> to level up difficulty.<br>
+          Answer incorrectly to level down.<br><br>
+          ${d.correct_streak > 0
+            ? `<span style="color:#34d399;">🔥 You're on a ${d.correct_streak} correct streak! ${3-d.correct_streak>0?`${3-d.correct_streak} more to level up!`:''}</span>`
+            : `<span style="color:var(--muted2);">Start answering to build your streak.</span>`}
+        </div>
+      </div>`;
+  } catch(e) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">📊</div><h3>No data yet</h3><p>Take a quiz to see your progress here.</p></div>`;
+  }
+}
+
+// ── Badge helpers ──
+function badgeForType(t) {
+  const map = { MCQ:'badge-mcq', TrueFalse:'badge-tf', FillBlank:'badge-fill' };
+  const label = { MCQ:'MCQ', TrueFalse:'T/F', FillBlank:'Fill' };
+  return `<span class="badge ${map[t]||'badge-mcq'}">${label[t]||t}</span>`;
+}
+function badgeForDiff(d) {
+  const map = { easy:'badge-easy', medium:'badge-medium', hard:'badge-hard' };
+  return `<span class="badge ${map[d]||'badge-easy'}">${d}</span>`;
+}
+
+// ── Init ──
+loadDashboard();
+</script>
+</body>
+</html>
